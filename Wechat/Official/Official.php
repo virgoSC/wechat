@@ -1296,48 +1296,25 @@ class Official
      * @param string $appsecret 如在类初始化时已提供，则可为空
      * @param string $token 手动指定access_token，非必要情况不建议用
      */
-    public function checkAuth($appid = '', $appsecret = '', $token = '')
+    public function checkAuth($appid = '', $appsecret = ''): array
     {
         if (!$appid || !$appsecret) {
             $appid = $this->appid;
             $appsecret = $this->appSecret;
         }
-        if ($token) { //手动指定token，优先使用
-            $this->accessToken = $token;
-            return $this->accessToken;
-        }
 
-        $authname = 'wechat_access_token' . $appid;
-        if ($rs = $this->getCache($authname)) {
-            $this->accessToken = $rs;
-            return $rs;
-        }
         $result = $this->http_get($this->apiUrlPrefix . $this->authUrl . 'appid=' . $appid . '&secret=' . $appsecret);
         if ($result) {
             $json = json_decode($result, true);
             if (!$json || isset($json['errcode'])) {
                 $this->errCode = $json['errcode'];
                 $this->errMsg = $json['errmsg'];
-                return false;
+                return [];
             }
-            $this->accessToken = $json['access_token'];
-            $expire = $json['expires_in'] ? intval($json['expires_in']) - 100 : 3600;
-            $this->setCache($authname, $this->accessToken, $expire);
-            return $this->accessToken;
-        }
-        return false;
-    }
 
-    /**
-     * 获取缓存，按需重载
-     *
-     * @param string $cachename
-     * @return mixed
-     */
-    protected function getCache($cachename)
-    {
-        $redis = $this->getDi()->get('redis');
-        return $redis->get($cachename);
+            return $json;
+        }
+        return [];
     }
 
     /**
