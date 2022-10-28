@@ -1302,6 +1302,7 @@ class Official
             $appid = $this->appid;
             $appsecret = $this->appSecret;
         }
+        //{"errcode":40164,"errmsg":"invalid ip 222.210.72.88 ipv6 ::ffff:222.210.72.88, not in whitelist rid: 635b8770-66fc73db-5d5f9803"}
 
         $result = $this->http_get($this->apiUrlPrefix . $this->authUrl . 'appid=' . $appid . '&secret=' . $appsecret);
         if ($result) {
@@ -2982,11 +2983,16 @@ class Official
      * }
      * @return boolean|array
      */
-    public function sendTemplateMessage($data)
+    public function sendTemplateMessage($accessToken = '', $data = '')
     {
-        if (!$this->accessToken && !$this->checkAuth()) {
-            return false;
+        if ($accessToken) {
+            $this->accessToken = $accessToken;
+        } else {
+            if (!$this->accessToken && !$this->checkAuth()) {
+                return false;
+            }
         }
+
         $result = $this->http_post($this->apiUrlPrefix . $this->templateSendUrl . 'access_token=' . $this->accessToken,
             self::json_encode($data));
         if ($result) {
